@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+
 	"github.com/valyala/fasthttp"
 )
 
@@ -15,16 +16,19 @@ func (h *MyHandler) HandleFastHTTP(ctx *fasthttp.RequestCtx) {
 		ctx.Path(), h.foobar)
 }
 
-func fastHTTPHandler(ctx *fasthttp.RequestCtx) {
-	fmt.Fprintf(ctx, "Hi there! Request URI is %q", ctx.RequestURI())
-}
+// func fastHTTPHandler(ctx *fasthttp.RequestCtx) {
+// 	fmt.Fprintf(ctx, "Hi there! Request URI is %q", ctx.RequestURI())
+// }
 
-func Start() {
+/**
+ * Start a server on a given port
+ */
+func Start(port string) {
 
 	myHandler := &MyHandler{foobar: "foobar"}
 
-	fasthttp.ListenAndServe(":8080", myHandler.HandleFastHTTP)
+	fasthttp.ListenAndServe(":"+port, myHandler.HandleFastHTTP)
 
 	// pass plain function to fasthttp
-	fasthttp.ListenAndServe(":8081", fastHTTPHandler)
+	// fasthttp.ListenAndServe(":8081", fastHTTPHandler)
 }

@@ -6,8 +6,8 @@ import (
 )
 
 func main() {
-	fmt.Println("Hello, world")
+	fmt.Println("Hello, world 2")
 
-	server.Start()
+	server.Start("8080")
 
 }
