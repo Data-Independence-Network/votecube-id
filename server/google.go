@@ -1,6 +1,7 @@
 package server
 
 import (
+	"bytes"
 	"fmt"
 
 	"github.com/valyala/fasthttp"
@@ -10,6 +11,8 @@ const (
 	Dev  = 0
 	Prod = 1
 )
+
+var GoogleLoginUri = []byte("/go/s")
 
 type Environment = int
 
@@ -29,20 +32,30 @@ func Start(port string, env Environment) {
 	// fmt.Println("Start 2.0 " + connectString)
 	// fasthttp.ListenAndServe(":8080", myHandler.HandleFastHTTP)
 
-	var httpHandler fasthttp.RequestHandler
+	var server *fasthttp.Server
 
 	switch env {
 	case Dev:
-		httpHandler = devHandler
+		server = &fasthttp.Server{
+			Handler:               devHandler,
+			MaxRequestBodySize:    2048,
+			NoDefaultServerHeader: true,
+			NoDefaultContentType:  true,
+		}
 	case Prod:
-		httpHandler = prodHandler
+		server = &fasthttp.Server{
+			// DisableKeepalive:      true,
+			Handler:               prodHandler,
+			MaxRequestBodySize:    2048,
+			NoDefaultServerHeader: true,
+			NoDefaultContentType:  true,
+			// TCPKeepalive:          false,
+		}
 	}
 
-	fmt.Println("Start 2.2")
+	fmt.Println("Start 2.7")
 	// pass plain function to fasthttp
-	fasthttp.ListenAndServe(connectString, httpHandler)
-
-	fmt.Println("Start 3")
+	server.ListenAndServe(connectString)
 }
 
 // request handler in net/http style, i.e. method bound to MyHandler struct
@@ -52,16 +65,39 @@ func (h *MyHandler) HandleFastHTTP(ctx *fasthttp.RequestCtx) {
 }
 
 func prodHandler(ctx *fasthttp.RequestCtx) {
-	if ctx.IsOptions() {
-		return
-	}
-
-	fmt.Fprintf(ctx, "Hi there! Request URI is %q", ctx.RequestURI())
+	respond(ctx)
 }
 
 func devHandler(ctx *fasthttp.RequestCtx) {
-	if ctx.IsOptions() {
-		ctx.Response.Header.Set("Allow", "POST")
+	if ctx.Request.Header.IsOptions() {
+		ctx.Response.Header.Set("Allow", "OPTIONS, PUT")
+		ctx.Response.Header.Set("Access-Control-Allow-Methods", "OPTIONS, PUT")
+		ctx.Response.Header.Set("Access-Control-Allow-Origin", "http://localhost:8000")
+		ctx.Response.Header.Set("Access-Control-Allow-Headers", "content-type")
+		return
 	}
-	fmt.Fprintf(ctx, "Hi there! Request URI is %q", ctx.RequestURI())
+
+	if !ctx.Request.Header.IsPut() {
+		return
+	}
+
+	ctx.Response.Header.Set("Access-Control-Allow-Origin", "http://localhost:8000")
+
+	respond(ctx)
+}
+
+func respond(ctx *fasthttp.RequestCtx) {
+	if !ctx.Request.Header.IsPut() {
+		return
+	}
+
+	var requestType = ctx.Request.RequestURI()
+
+	if bytes.Equal(GoogleLoginUri, requestType) {
+		fmt.Fprintf(ctx, "Google Login!")
+	} else {
+		return
+	}
+
+	fmt.Fprintf(ctx, "Token %q", ctx.Request.Body())
 }
