@@ -61,7 +61,7 @@ func prodHandler(ctx *fasthttp.RequestCtx) {
 
 func devHandler(ctx *fasthttp.RequestCtx) {
 	if ctx.IsOptions() {
-		ctx.SetHeader("Allow", "POST")
+		ctx.Response.Header.Set("Allow", "POST")
 	}
 	fmt.Fprintf(ctx, "Hi there! Request URI is %q", ctx.RequestURI())
 }
