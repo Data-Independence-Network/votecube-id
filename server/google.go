@@ -3,6 +3,7 @@ package server
 import (
 	"bytes"
 	"fmt"
+	verify "votecube-id/verify"
 
 	"github.com/valyala/fasthttp"
 )
@@ -10,6 +11,10 @@ import (
 const (
 	Dev  = 0
 	Prod = 1
+)
+
+const (
+	InvalidUri = "0"
 )
 
 var GoogleLoginUri = []byte("/go/s")
@@ -94,8 +99,14 @@ func respond(ctx *fasthttp.RequestCtx) {
 	var requestType = ctx.Request.RequestURI()
 
 	if bytes.Equal(GoogleLoginUri, requestType) {
-		fmt.Fprintf(ctx, "Google Login!")
+		var token, err = verify.VerifyToken(ctx.Request.Body())
+		if err != nil {
+			fmt.Fprintf(ctx, err.Error())
+			return
+		}
+		fmt.Fprintf(ctx, token.AccessToken)
 	} else {
+		fmt.Fprintf(ctx, InvalidUri)
 		return
 	}
 
