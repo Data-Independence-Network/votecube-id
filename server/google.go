@@ -99,12 +99,12 @@ func respond(ctx *fasthttp.RequestCtx) {
 	var requestType = ctx.Request.RequestURI()
 
 	if bytes.Equal(GoogleLoginUri, requestType) {
-		var token, err = verify.VerifyToken(ctx.Request.Body())
+		var claims, err = verify.VerifyToken(ctx.Request.Body())
 		if err != nil {
 			fmt.Fprintf(ctx, err.Error())
 			return
 		}
-		fmt.Fprintf(ctx, token.AccessToken)
+		fmt.Fprintf(ctx, claims.Email)
 	} else {
 		fmt.Fprintf(ctx, InvalidUri)
 		return
