@@ -2,8 +2,11 @@ package server
 
 import (
 	"bytes"
+	"database/sql"
 	"fmt"
-	verify "votecube-id/verify"
+	"votecube-id/db"
+	"votecube-id/models"
+	"votecube-id/verify"
 
 	"github.com/valyala/fasthttp"
 )
@@ -28,7 +31,7 @@ type MyHandler struct {
 /**
  * Start a server on a given port
  */
-func Start(port string, env Environment) {
+func Start(port string, env Environment, dBase *sql.DB) {
 
 	// myHandler := &MyHandler{foobar: "foobar"}
 
@@ -100,6 +103,12 @@ func respond(ctx *fasthttp.RequestCtx) {
 
 	if bytes.Equal(GoogleLoginUri, requestType) {
 		var claims, err = verify.VerifyToken(ctx.Request.Body())
+		if err != nil {
+			fmt.Fprintf(ctx, err.Error())
+			return
+		}
+		u := &models.User{ID: 1, Email: "tester"}
+		err = db.SaveUser(u)
 		if err != nil {
 			fmt.Fprintf(ctx, err.Error())
 			return

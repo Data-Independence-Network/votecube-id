@@ -1,9 +1,14 @@
 package main
 
+//go:generate sqlboiler --wipe crdb
+
 import (
 	"fmt"
+	"votecube-id/db"
 	"votecube-id/server"
 	"votecube-id/verify"
+
+	_ "github.com/lib/pq"
 )
 
 func main() {
@@ -11,6 +16,8 @@ func main() {
 
 	verify.SetConfig()
 
-	server.Start("8080", server.Dev)
+	dBase := db.SetupDb()
+
+	server.Start("8080", server.Dev, dBase)
 
 }

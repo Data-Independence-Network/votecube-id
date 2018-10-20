@@ -10,6 +10,10 @@ import (
 
 var dBase *sql.DB
 
+type Email string
+
+var UserRequestCh = make(chan Email)
+
 func SetupDb() *sql.DB {
 	db, err := sql.Open("postgres", `postgresql://root@localhost:26257/votecube?sslmode=disable`)
 
