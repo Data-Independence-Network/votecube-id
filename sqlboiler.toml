@@ -1,0 +1,8 @@
+[crdb]
+user="root"
+pass=""
+host="localhost"
+port=26257
+dbname="votecube"
+sslmode="disable"
+# whitelist = ["users"]
