@@ -61,7 +61,7 @@ func Start(port string, env Environment, dBase *sql.DB) {
 		}
 	}
 
-	fmt.Println("Start 2.7")
+	fmt.Println("Start 2.8")
 	// pass plain function to fasthttp
 	server.ListenAndServe(connectString)
 }
@@ -102,22 +102,27 @@ func respond(ctx *fasthttp.RequestCtx) {
 	var requestType = ctx.Request.RequestURI()
 
 	if bytes.Equal(GoogleLoginUri, requestType) {
-		var claims, err = verify.VerifyToken(ctx.Request.Body())
-		if err != nil {
-			fmt.Fprintf(ctx, err.Error())
-			return
-		}
-		u := &models.User{ID: 1, Email: "tester"}
-		err = db.SaveUser(u)
-		if err != nil {
-			fmt.Fprintf(ctx, err.Error())
-			return
-		}
-		fmt.Fprintf(ctx, claims.Email)
+		onGoogleLogin(ctx)
 	} else {
 		fmt.Fprintf(ctx, InvalidUri)
 		return
 	}
 
 	fmt.Fprintf(ctx, "Token %q", ctx.Request.Body())
+}
+
+func onGoogleLogin(ctx *fasthttp.RequestCtx) {
+	var claims, err = verify.VerifyToken(ctx.Request.Body())
+	if err != nil {
+		fmt.Fprintf(ctx, err.Error())
+		return
+	}
+
+	u := &models.User{ID: 1, Email: "tester"}
+	err = db.SaveUser(u)
+	if err != nil {
+		fmt.Fprintf(ctx, err.Error())
+		return
+	}
+	fmt.Fprintf(ctx, claims.Email)
 }
