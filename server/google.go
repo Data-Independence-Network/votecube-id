@@ -118,6 +118,13 @@ func onGoogleLogin(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
+	loginInfo := &db.LoginInfo{
+		Email:      claims.Email,
+		ResponseCh: make(chan bool),
+	}
+
+	db.UserRequestCh <- loginInfo
+
 	u := &models.User{ID: 1, Email: "tester"}
 	err = db.SaveUser(u)
 	if err != nil {

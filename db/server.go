@@ -14,16 +14,24 @@ import (
 var dBase *sql.DB
 
 type LoginInfo struct {
-	email            string
-	password         string
-	verificationCode string
-	found            bool
-	responseCh       chan bool
+	Email            string
+	Password         string
+	VerificationCode string
+	Found            bool
+	ResponseCh       chan bool
 }
 
-var UserRequestCh = make(chan LoginInfo)
+type UserState int
 
-var incomingLoginInfos = make([]LoginInfo, 0, 1)
+const (
+	NewUser   UserState = 0
+	OauthUser UserState = 1
+	PwdUser   UserState = 2
+)
+
+var UserRequestCh = make(chan *LoginInfo)
+
+var incomingLoginInfos = make([]*LoginInfo, 0, 1)
 
 const SLEEP_TIME = 1000 * time.Millisecond
 
@@ -70,7 +78,7 @@ func processLoginInfos() {
 		emails := make([]string, len(loginInfosToProcess))
 
 		for _, loginInfo := range loginInfosToProcess {
-			email := loginInfo.email
+			email := loginInfo.Email
 			emails = append(emails, email)
 			loginInfoMap[email] = loginInfo
 		}
@@ -79,7 +87,7 @@ func processLoginInfos() {
 
 		if err != nil {
 			for _, loginInfo := range loginInfosToProcess {
-				loginInfo.responseCh <- false
+				loginInfo.ResponseCh <- false
 			}
 			log.Printf("DB error: %v\n", err)
 			continue
@@ -87,13 +95,15 @@ func processLoginInfos() {
 
 		for _, user := range users {
 			loginInfo := loginInfoMap[user.Email]
-			loginInfo.found = true
-			loginInfo.responseCh <- true
+			loginInfo.Found = true
+			loginInfo.ResponseCh <- true
+			close(loginInfo.ResponseCh)
 		}
 
 		for _, loginInfo := range loginInfosToProcess {
-			if !loginInfo.found {
-				loginInfo.responseCh <- false
+			if !loginInfo.Found {
+				loginInfo.ResponseCh <- false
+				close(loginInfo.ResponseCh)
 			}
 		}
 
